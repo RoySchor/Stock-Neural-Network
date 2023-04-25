@@ -13,6 +13,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 def main():
+    """
     start_date = '2014-01-01'
     end_date = '2016-01-01'
     stockDataFrame = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt', usecols=['Date', 'Close'], dtype={'Date': 'str', 'Close': 'float'}, parse_dates=['Date'], index_col='Date')
@@ -54,44 +55,38 @@ def main():
 
     model.compile(optimizer='adam', loss='mean_squared_error')
 
-    # model.fit(train_data[:-1], train_data[1:], epochs=3, verbose=2)
+    model.fit(train_data[:-1], train_data[1:], epochs=3, verbose=2)
     
     # model.fit(x_train, y_train, epochs=3, verbose=2)
 
-    # test_loss = model.evaluate(test_data[:-1], test_data[1:], verbose=0)
+    test_loss = model.evaluate(test_data[:-1], test_data[1:], verbose=0)
     # test_loss = model.evaluate(x_test, y_test, verbose=0)
     print('Test loss:', test_loss)
     test_predictions = model.predict(test_data[:-1])
 
-    # plt.plot(test_data[1:], label='Test Data')
-    # plt.plot(test_predictions, label='Test Predictions')
-    # plt.plot(train_data, label='Training')
-    # # plt.ylim(float(int(minClosePrice - 5.0)), float(int(maxClosePrice + 5.0)))
-    # plt.legend()
-    # plt.show()
-
+    plt.plot(test_data[1:], label='Test Data')
+    plt.plot(test_predictions, label='Test Predictions')
+    plt.plot(train_data, label='Training')
+    # plt.ylim(float(int(minClosePrice - 5.0)), float(int(maxClosePrice + 5.0)))
+    plt.legend()
+    plt.show()
+    """
 
 #############################################################################################
 ############################### Try Number 5 or so!! ########################################
 #############################################################################################
-    start_date_1 = '2014-01-01'
+    start_date_1 = '2013-12-31'
     end_date_1 = '2016-01-01'
     stockDataFrame_1 = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt', usecols=['Date', 'Close'], dtype={'Date': 'str', 'Close': 'float'}, parse_dates=['Date'], index_col='Date')
     # Reads in all the data, then slices it to only take the data after the start date
-    stockDataFrame_1 = stockDataFrame.loc[start_date:end_date]
-    minClosePrice_1 = stockDataFrame['Close'].min()
-    maxClosePrice_1 = stockDataFrame['Close'].max()
+    stockDataFrame_1 = stockDataFrame_1.loc[start_date_1:end_date_1]
+    minClosePrice_1 = stockDataFrame_1['Close'].min()
+    maxClosePrice_1 = stockDataFrame_1['Close'].max()
 
-    scalar = MinMaxScaler(feature_range=(0,1))
-    training_data_scaled = scalar.fit_transform(stockDataFrame_1)
-    x_train_1 = []
-    y_train_1 = []
-    for i in range(60, 2035):
-      x_train_1.append(training_data_scaled[i-60:i, 0])
-      y_train_1.append(training_data_scaled[i, 0])
-      x_train_1, y_train_1 = np.array(x_train_1), np.array(y_train_1)
-      x_train_1 = np.reshape(x_train_1, (x_train_1.shape[0], x_train_1.shape[1], 1))
-
+    # we want to split the data into different window sizes (4 for train, then 1 for test)
+    # how do we do it?
+    split_window_data = stockDataFrame_1['Close'].values.reshape(-1, 5)
+    print(stockDataFrame_1['Close'].values.reshape(-1, 5))
 
 if __name__ == "__main__":
   main()
