@@ -2,12 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import pandas as pd
-import csv
-import random
-import sys
-import io
-import os
-import datetime
 from bs4 import BeautifulSoup
 import requests as rq
 from tensorflow.keras.callbacks import LambdaCallback
@@ -15,13 +9,15 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.optimizers import RMSprop
 from tensorflow import keras
+from sklearn.preprocessing import MinMaxScaler
 
 
 def main():
-    start_date = '2016-01-01'
+    start_date = '2014-01-01'
+    end_date = '2016-01-01'
     stockDataFrame = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt', usecols=['Date', 'Close'], dtype={'Date': 'str', 'Close': 'float'}, parse_dates=['Date'], index_col='Date')
-    # Reads in all the data, then slices it to only take the data after the start date (Janurary 1st of 2016 and onward)
-    stockDataFrame = stockDataFrame.loc[start_date:]
+    # Reads in all the data, then slices it to only take the data after the start date
+    stockDataFrame = stockDataFrame.loc[start_date:end_date]
     minClosePrice = stockDataFrame['Close'].min()
     maxClosePrice = stockDataFrame['Close'].max()
 
@@ -36,28 +32,70 @@ def main():
     # This normalizes the Closing prices to be btwn 0-1, based off of the max price
     normalized_prices = closing_prices / closing_prices.max()
 
-    # This takes 80% of the normalized data to be trained set and 20% to be the test
+    # This takes the first 80% of the normalized data to be trained set and 
+    # the last 20% to be the test
     train_size = int(len(normalized_prices) * 0.8)
     train_data, test_data = normalized_prices[:train_size], normalized_prices[train_size:]
 
+    # Splits the total data in half (x & y)
+    # Takes x and splits it into train and test, first half is train second half is test
+    # Does the same with y, y is the second half of the data while x is first
+    x_data = normalized_prices[:int(len(normalized_prices)/2)]
+    y_data = normalized_prices[int(len(normalized_prices)/2):]
+    x_train = x_data[:int(len(x_data)/2)]
+    x_test = x_data[int(len(x_data)/2):]
+    y_train = y_data[:int(len(x_data)/2)]
+    y_test = y_data[int(len(x_data)/2):]
+
     model = Sequential()
     model.add(LSTM(50, activation='relu', input_shape=(1, 1)))
+    #model.add(Dropout(0.2))
     model.add(Dense(1))
 
     model.compile(optimizer='adam', loss='mean_squared_error')
 
-    model.fit(train_data[:-1], train_data[1:], epochs=10, batch_size=1, verbose=2)
+    # model.fit(train_data[:-1], train_data[1:], epochs=3, verbose=2)
+    
+    # model.fit(x_train, y_train, epochs=3, verbose=2)
 
-    test_loss = model.evaluate(test_data[:-1], test_data[1:], verbose=0)
+    # test_loss = model.evaluate(test_data[:-1], test_data[1:], verbose=0)
+    # test_loss = model.evaluate(x_test, y_test, verbose=0)
     print('Test loss:', test_loss)
     test_predictions = model.predict(test_data[:-1])
 
     # plt.plot(test_data[1:], label='Test Data')
-    plt.plot(test_predictions, label='Predictions yeah right')
-    plt.plot(train_data, label='Training')
-    # plt.ylim(float(int(minClosePrice - 5.0)), float(int(maxClosePrice + 5.0)))
-    plt.legend()
-    plt.show()
+    # plt.plot(test_predictions, label='Test Predictions')
+    # plt.plot(train_data, label='Training')
+    # # plt.ylim(float(int(minClosePrice - 5.0)), float(int(maxClosePrice + 5.0)))
+    # plt.legend()
+    # plt.show()
+
+
+#############################################################################################
+############################### Try Number 5 or so!! ########################################
+#############################################################################################
+    start_date_1 = '2014-01-01'
+    end_date_1 = '2016-01-01'
+    stockDataFrame_1 = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt', usecols=['Date', 'Close'], dtype={'Date': 'str', 'Close': 'float'}, parse_dates=['Date'], index_col='Date')
+    # Reads in all the data, then slices it to only take the data after the start date
+    stockDataFrame_1 = stockDataFrame.loc[start_date:end_date]
+    minClosePrice_1 = stockDataFrame['Close'].min()
+    maxClosePrice_1 = stockDataFrame['Close'].max()
+
+    scalar = MinMaxScaler(feature_range=(0,1))
+    training_data_scaled = scalar.fit_transform(stockDataFrame_1)
+    x_train_1 = []
+    y_train_1 = []
+    for i in range(60, 2035):
+      x_train_1.append(training_data_scaled[i-60:i, 0])
+      y_train_1.append(training_data_scaled[i, 0])
+      x_train_1, y_train_1 = np.array(x_train_1), np.array(y_train_1)
+      x_train_1 = np.reshape(x_train_1, (x_train_1.shape[0], x_train_1.shape[1], 1))
+
 
 if __name__ == "__main__":
   main()
+
+
+def on_epcoh_end(epoch, _):
+   print("Print something after each epoch to see where we at")
