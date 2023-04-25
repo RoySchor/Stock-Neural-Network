@@ -73,7 +73,8 @@ def main():
     """
 
 #############################################################################################
-############################### Try Number 5 or so!! ########################################
+############################### Zane Start HERE!!!!! ########################################
+##################### Pick and Choose Code Segments From Above ##############################
 #############################################################################################
     start_date_1 = '2013-12-31'
     end_date_1 = '2016-01-01'
@@ -83,10 +84,39 @@ def main():
     minClosePrice_1 = stockDataFrame_1['Close'].min()
     maxClosePrice_1 = stockDataFrame_1['Close'].max()
 
-    # we want to split the data into different window sizes (4 for train, then 1 for test)
-    # how do we do it?
+    # This splits the data into a 2D array of groups of 5
     split_window_data = stockDataFrame_1['Close'].values.reshape(-1, 5)
     print(stockDataFrame_1['Close'].values.reshape(-1, 5))
+
+    """
+    Notes from Convo:
+    model.fit(xtrain, ytrain, validation.data(xtest, ytest)) 
+    return_sequence = false // already like this by default
+    Want to split the data points into this:
+    [1,2,3,4,5,6,7,7,8,9,10]
+    Take it in window sets
+    Dense(1, activates = rely
+    LSTM(64 // play around a get better)
+    
+    What we want to do:
+    - we want many groups of 4 and 1. 4 is x_train, 1 is y_train. (first 80% of data)
+    - The last 20% will be in the same style just x_test is the 4 and y_test is the 1
+    - currently I only reshaped it all into a 2d array of groups of 5
+    - So maybe you want to normalize all the data first then reshape it like I did it above
+    - You also need to not just reshape it but make it different arrays
+      - as in not many arrays of 5 elements but arrays of 4 elements then 1 elements then 4 then 1 etc
+      - [[1,2,3,4], [5], [6,3,7,8], [9], ...]
+      - But we want to split ^^^^ that up. SO that x_train is its own 2D array and y_train (of the single 'hidden' values is its own)
+      - Like this: x_train = [[1,2,3,4], [7,5,6,3],[8,9,2,5], ...]
+      - y_train = [[2],[6],[8],...] I think at least
+      - And the same for x_test and y_test
+      - try to find something more efficient than a loop like .reshape or something
+    - That's how we want the data to be in
+    - Then we want to fit it and add a Dense layer of (1 with an activation = "relu")
+    - We then add the LTSM(64)  // he said play around with the amounts for the lstm does not need to be 64
+    
+    - 
+    """
 
 if __name__ == "__main__":
   main()
