@@ -81,66 +81,56 @@ def main():
     maxClosePrice_1 = stockDataFrame_1['Close'].max()
     
     just_close_vals = stockDataFrame_1['Close'].values
-    testing_data = []
+    training_data = []
     x_train = []
     y_train = []
     eighty_percent = int(len(just_close_vals) * .8)
     
     # This is for the training data which is for the first 80% of the data
     for index in range(5, eighty_percent, 5):
-       x_train_vals = just_close_vals[index - 5:index - 1]
-       y_train_vals = [just_close_vals[index - 1]]
+      x_train_vals = just_close_vals[index - 5:index - 1]
+      y_train_vals = just_close_vals[index - 1]
 
-       testing_data.append(x_train_vals)
-       testing_data.append(y_train_vals)
-       x_train.append(x_train_vals)
-       y_train.append(y_train_vals)
+      training_data.append(x_train_vals)
+      training_data.append([y_train_vals])
+      x_train.append(just_close_vals[index-5])
+      x_train.append(just_close_vals[index-4])
+      x_train.append(just_close_vals[index-3])
+      x_train.append(just_close_vals[index-2])
+      y_train.append(y_train_vals)
 
     # This is for the last 20% of the data which is the testing data
-    training_data = []
+    test_data = []
     x_test = []
     y_test = []
     for index in range(eighty_percent, len(just_close_vals), 5):
-       x_test_vals = just_close_vals[index - 5:index - 1]
-       y_test_vals = [just_close_vals[index - 1]]
+      x_test_vals = just_close_vals[index - 5:index - 1]
+      y_test_vals = just_close_vals[index - 1]
 
-       training_data.append(x_test_vals)
-       training_data.append(y_test_vals)
-       x_test.append(x_test_vals)
-       y_test.append(y_test_vals)
-
-
-    print(testing_data)
-    print("THEN THIS IS THE TRAINING DATA LAST 20% \n\n")
-    print(training_data)
-
+      test_data.append(x_test_vals)
+      test_data.append([y_test_vals])
+      x_test.append(just_close_vals[index-5])
+      x_test.append(just_close_vals[index-4])
+      x_test.append(just_close_vals[index-3])
+      x_test.append(just_close_vals[index-2])
+      y_test.append(y_test_vals)
 
     model = Sequential()
-    model.add(Dense(1), activation = 'relu')
+    model.add(Dense(1))
     model.add(LSTM(64, activation='relu', input_shape=(1, 1)))
-
-    # #model.add(Dropout(0.2))
-    # model.add(Dense(1))
-
     model.compile(optimizer='adam', loss='mean_squared_error')
+    model.fit(x_train, x_test, epochs=3, verbose=2, validation_data=(y_train, y_test))
+    # # #model.add(Dropout(0.2))
 
-    model.fit(x_train, y_train, epochs=3, verbose=2, validation_data=(x_test, y_test))
+    test_loss = model.evaluate(y_train, y_test, verbose=0)
+    print('Test loss:', test_loss)
+    # test_predictions = fmodel.predict(test_data[:-1])
 
-    
-    #model.fit(training_data[:-1], training_data[1:], epochs=10, batch_size=1, verbose=2)
-    #test_loss = model.evaluate(testing_data[:-1], testing_data[1:], verbose=0)
-    #     test_predictions = model.predict(test_data[:-1])
-
-    # plt.plot(testing_data[1:], label='Test Data')
-    # plt.plot(testing_predictions, label='Predictions yeah right')
-    # plt.plot(training_data, label='Training')
+    plt.plot(test_data, label='Test Data')
+    plt.plot(training_data, label='Training')
     # # plt.ylim(float(int(minClosePrice - 5.0)), float(int(maxClosePrice + 5.0)))
-    # plt.legend()
-    # plt.show()
+    plt.legend()
+    plt.show()
 
 if __name__ == "__main__":
   main()
-
-
-def on_epcoh_end(epoch, _):
-   print("Print something after each epoch to see where we at")
