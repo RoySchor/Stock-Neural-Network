@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import pandas as pd
-from bs4 import BeautifulSoup
 import requests as rq
 from tensorflow.keras.callbacks import LambdaCallback
 from tensorflow.keras.models import Sequential
@@ -14,40 +13,6 @@ from sklearn.preprocessing import MinMaxScaler
 
 def main():
     """
-    start_date = '2014-01-01'
-    end_date = '2016-01-01'
-    stockDataFrame = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt', usecols=['Date', 'Close'], dtype={'Date': 'str', 'Close': 'float'}, parse_dates=['Date'], index_col='Date')
-    # Reads in all the data, then slices it to only take the data after the start date
-    stockDataFrame = stockDataFrame.loc[start_date:end_date]
-    minClosePrice = stockDataFrame['Close'].min()
-    maxClosePrice = stockDataFrame['Close'].max()
-
-    # stockDataFrame['Close'].plot()
-    # plt.title("Closing Prices of AAPL Stock Over Time")
-    # plt.xlabel("Stock Dates from 2016 onward")
-    # plt.ylabel("Stock Value in Dollars")
-    # plt.ylim(float(int(minClosePrice - 5.0)), float(int(maxClosePrice + 5.0)))
-    # plt.show()
-
-    closing_prices = stockDataFrame['Close'].values.reshape(-1, 1)
-    # This normalizes the Closing prices to be btwn 0-1, based off of the max price
-    normalized_prices = closing_prices / closing_prices.max()
-
-    # This takes the first 80% of the normalized data to be trained set and 
-    # the last 20% to be the test
-    train_size = int(len(normalized_prices) * 0.8)
-    train_data, test_data = normalized_prices[:train_size], normalized_prices[train_size:]
-
-    # Splits the total data in half (x & y)
-    # Takes x and splits it into train and test, first half is train second half is test
-    # Does the same with y, y is the second half of the data while x is first
-    x_data = normalized_prices[:int(len(normalized_prices)/2)]
-    y_data = normalized_prices[int(len(normalized_prices)/2):]
-    x_train = x_data[:int(len(x_data)/2)]
-    x_test = x_data[int(len(x_data)/2):]
-    y_train = y_data[:int(len(x_data)/2)]
-    y_test = y_data[int(len(x_data)/2):]
-
     model = Sequential()
     model.add(LSTM(50, activation='relu', input_shape=(1, 1)))
     #model.add(Dropout(0.2))
@@ -71,9 +36,10 @@ def main():
     plt.legend()
     plt.show()
     """
-
+    # Start and end date of the data we will reading in
     start_date_1 = '2013-12-31'
     end_date_1 = '2016-01-01'
+    # File we read in, we only read the Date and Close values from the CSV
     stockDataFrame_1 = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt', usecols=['Date', 'Close'], dtype={'Date': 'str', 'Close': 'float'}, parse_dates=['Date'], index_col='Date')
     # Reads in all the data, then slices it to only take the data after the start date
     stockDataFrame_1 = stockDataFrame_1.loc[start_date_1:end_date_1]
@@ -81,9 +47,9 @@ def main():
     maxClosePrice_1 = stockDataFrame_1['Close'].max()
     
     just_close_vals = stockDataFrame_1['Close'].values
-    training_data = []
-    x_train = []
-    y_train = []
+    raw_training_data = []
+    raw_x_train_data = []
+    raw_y_train_data = []
     eighty_percent = int(len(just_close_vals) * .8)
     
     # This is for the training data which is for the first 80% of the data
@@ -91,44 +57,54 @@ def main():
       x_train_vals = just_close_vals[index - 5:index - 1]
       y_train_vals = just_close_vals[index - 1]
 
-      training_data.append(x_train_vals)
-      training_data.append([y_train_vals])
-      x_train.append(just_close_vals[index-5])
-      x_train.append(just_close_vals[index-4])
-      x_train.append(just_close_vals[index-3])
-      x_train.append(just_close_vals[index-2])
-      y_train.append(y_train_vals)
+      raw_training_data.append(x_train_vals)
+      # training_data.append([y_train_vals])
+      # Need to add the three 0's, because when we np.array it we do matric multiplication 
+      # and we need the dimension to be equal for the multiplication to work
+      raw_training_data.append([y_train_vals, 0, 0, 0])
+      raw_x_train_data.append(x_train_vals)
+      raw_y_train_data.append([y_train_vals])
 
     # This is for the last 20% of the data which is the testing data
-    test_data = []
-    x_test = []
-    y_test = []
+    raw_test_data = []
+    raw_x_test_data = []
+    raw_y_test_data = []
     for index in range(eighty_percent, len(just_close_vals), 5):
       x_test_vals = just_close_vals[index - 5:index - 1]
       y_test_vals = just_close_vals[index - 1]
 
-      test_data.append(x_test_vals)
-      test_data.append([y_test_vals])
-      x_test.append(just_close_vals[index-5])
-      x_test.append(just_close_vals[index-4])
-      x_test.append(just_close_vals[index-3])
-      x_test.append(just_close_vals[index-2])
-      y_test.append(y_test_vals)
+      raw_test_data.append(x_test_vals)
+      # test_data.append([y_test_vals])
+      raw_test_data.append([y_test_vals, 0, 0, 0])
+      raw_x_test_data.append(x_test_vals)
+      raw_y_test_data.append([y_test_vals])
+
+    # Need to fix the arrays np arrays
+    training_data = np.array(raw_training_data)
+    x_train = np.array(raw_x_train_data)
+    y_train = np.array(raw_y_train_data)
+    test_data = np.array(raw_test_data)
+    x_test = np.array(raw_x_test_data)
+    y_test = np.array(raw_y_test_data)
+    
+    # LSTM Paramater layout:
+    # model.add(keras.layers.LSTM(hidden_nodes, input_shape=(window, num_features), consume_less="mem"))
 
     model = Sequential()
-    model.add(Dense(1))
-    model.add(LSTM(64, activation='relu', input_shape=(1, 1)))
+    model.add(LSTM(64, input_shape=(4, 1)))
+    model.add(Dense(1, activation='relu'))
     model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(x_train, x_test, epochs=3, verbose=2, validation_data=(y_train, y_test))
-    # # #model.add(Dropout(0.2))
+    model.fit(x_train, y_train, epochs=3, verbose=2, validation_data=(x_test, y_test))
+    # model.add(Dropout(0.2)) --> Unsure if needed, dropout is where random neurons are ignored in training temporarily
 
-    test_loss = model.evaluate(y_train, y_test, verbose=0)
-    print('Test loss:', test_loss)
-    # test_predictions = fmodel.predict(test_data[:-1])
+    # test_loss = model.evaluate(y_train, y_test, verbose=0)
+    # print('Test loss:', test_loss)
+
+    # test_predictions = model.predict(test_data[:-1])
+    # print(test_predictions)
 
     plt.plot(test_data, label='Test Data')
     plt.plot(training_data, label='Training')
-    # # plt.ylim(float(int(minClosePrice - 5.0)), float(int(maxClosePrice + 5.0)))
     plt.legend()
     plt.show()
 
