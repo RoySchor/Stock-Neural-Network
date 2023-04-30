@@ -72,10 +72,6 @@ def main():
     plt.show()
     """
 
-#############################################################################################
-############################### Zane Start HERE!!!!! ########################################
-##################### Pick and Choose Code Segments From Above ##############################
-#############################################################################################
     start_date_1 = '2013-12-31'
     end_date_1 = '2016-01-01'
     stockDataFrame_1 = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt', usecols=['Date', 'Close'], dtype={'Date': 'str', 'Close': 'float'}, parse_dates=['Date'], index_col='Date')
@@ -83,40 +79,64 @@ def main():
     stockDataFrame_1 = stockDataFrame_1.loc[start_date_1:end_date_1]
     minClosePrice_1 = stockDataFrame_1['Close'].min()
     maxClosePrice_1 = stockDataFrame_1['Close'].max()
-
-    # This splits the data into a 2D array of groups of 5
-    split_window_data = stockDataFrame_1['Close'].values.reshape(-1, 5)
-    print(stockDataFrame_1['Close'].values.reshape(-1, 5))
-
-    """
-    Notes from Convo:
-    model.fit(xtrain, ytrain, validation.data(xtest, ytest)) 
-    return_sequence = false // already like this by default
-    Want to split the data points into this:
-    [1,2,3,4,5,6,7,7,8,9,10]
-    Take it in window sets
-    Dense(1, activates = rely
-    LSTM(64 // play around a get better)
     
-    What we want to do:
-    - we want many groups of 4 and 1. 4 is x_train, 1 is y_train. (first 80% of data)
-    - The last 20% will be in the same style just x_test is the 4 and y_test is the 1
-    - currently I only reshaped it all into a 2d array of groups of 5
-    - So maybe you want to normalize all the data first then reshape it like I did it above
-    - You also need to not just reshape it but make it different arrays
-      - as in not many arrays of 5 elements but arrays of 4 elements then 1 elements then 4 then 1 etc
-      - [[1,2,3,4], [5], [6,3,7,8], [9], ...]
-      - But we want to split ^^^^ that up. SO that x_train is its own 2D array and y_train (of the single 'hidden' values is its own)
-      - Like this: x_train = [[1,2,3,4], [7,5,6,3],[8,9,2,5], ...]
-      - y_train = [[2],[6],[8],...] I think at least
-      - And the same for x_test and y_test
-      - try to find something more efficient than a loop like .reshape or something
-    - That's how we want the data to be in
-    - Then we want to fit it and add a Dense layer of (1 with an activation = "relu")
-    - We then add the LTSM(64)  // he said play around with the amounts for the lstm does not need to be 64
+    just_close_vals = stockDataFrame_1['Close'].values
+    testing_data = []
+    x_train = []
+    y_train = []
+    eighty_percent = int(len(just_close_vals) * .8)
     
-    - 
-    """
+    # This is for the training data which is for the first 80% of the data
+    for index in range(5, eighty_percent, 5):
+       x_train_vals = just_close_vals[index - 5:index - 1]
+       y_train_vals = [just_close_vals[index - 1]]
+
+       testing_data.append(x_train_vals)
+       testing_data.append(y_train_vals)
+       x_train.append(x_train_vals)
+       y_train.append(y_train_vals)
+
+    # This is for the last 20% of the data which is the testing data
+    training_data = []
+    x_test = []
+    y_test = []
+    for index in range(eighty_percent, len(just_close_vals), 5):
+       x_test_vals = just_close_vals[index - 5:index - 1]
+       y_test_vals = [just_close_vals[index - 1]]
+
+       training_data.append(x_test_vals)
+       training_data.append(y_test_vals)
+       x_test.append(x_test_vals)
+       y_test.append(y_test_vals)
+
+
+    print(testing_data)
+    print("THEN THIS IS THE TRAINING DATA LAST 20% \n\n")
+    print(training_data)
+
+
+    model = Sequential()
+    model.add(Dense(1), activation = 'relu')
+    model.add(LSTM(64, activation='relu', input_shape=(1, 1)))
+
+    # #model.add(Dropout(0.2))
+    # model.add(Dense(1))
+
+    model.compile(optimizer='adam', loss='mean_squared_error')
+
+    model.fit(x_train, y_train, epochs=3, verbose=2, validation_data=(x_test, y_test))
+
+    
+    #model.fit(training_data[:-1], training_data[1:], epochs=10, batch_size=1, verbose=2)
+    #test_loss = model.evaluate(testing_data[:-1], testing_data[1:], verbose=0)
+    #     test_predictions = model.predict(test_data[:-1])
+
+    # plt.plot(testing_data[1:], label='Test Data')
+    # plt.plot(testing_predictions, label='Predictions yeah right')
+    # plt.plot(training_data, label='Training')
+    # # plt.ylim(float(int(minClosePrice - 5.0)), float(int(maxClosePrice + 5.0)))
+    # plt.legend()
+    # plt.show()
 
 if __name__ == "__main__":
   main()
