@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import pandas as pd
-import requests as rq
 from tensorflow.keras.callbacks import LambdaCallback
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
@@ -12,45 +11,31 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 def main():
-    """
-    model = Sequential()
-    model.add(LSTM(50, activation='relu', input_shape=(1, 1)))
-    #model.add(Dropout(0.2))
-    model.add(Dense(1))
-
-    model.compile(optimizer='adam', loss='mean_squared_error')
-
-    model.fit(train_data[:-1], train_data[1:], epochs=3, verbose=2)
-    
-    # model.fit(x_train, y_train, epochs=3, verbose=2)
-
-    test_loss = model.evaluate(test_data[:-1], test_data[1:], verbose=0)
-    # test_loss = model.evaluate(x_test, y_test, verbose=0)
-    print('Test loss:', test_loss)
-    test_predictions = model.predict(test_data[:-1])
-
-    plt.plot(test_data[1:], label='Test Data')
-    plt.plot(test_predictions, label='Test Predictions')
-    plt.plot(train_data, label='Training')
-    # plt.ylim(float(int(minClosePrice - 5.0)), float(int(maxClosePrice + 5.0)))
-    plt.legend()
-    plt.show()
-    """
     # Start and end date of the data we will reading in
     start_date_1 = '2013-12-31'
     end_date_1 = '2016-01-01'
     # File we read in, we only read the Date and Close values from the CSV
-    stockDataFrame_1 = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt', usecols=['Date', 'Close'], dtype={'Date': 'str', 'Close': 'float'}, parse_dates=['Date'], index_col='Date')
+    stockDataFrame = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt', usecols=['Date', 'Close'], dtype={'Date': 'str', 'Close': 'float'}, parse_dates=['Date'], index_col='Date')
     # Reads in all the data, then slices it to only take the data after the start date
-    stockDataFrame_1 = stockDataFrame_1.loc[start_date_1:end_date_1]
-    minClosePrice_1 = stockDataFrame_1['Close'].min()
-    maxClosePrice_1 = stockDataFrame_1['Close'].max()
-    
-    just_close_vals = stockDataFrame_1['Close'].values
+    stockDataFrame = stockDataFrame.loc[start_date_1:end_date_1]
+
+    """
+    # Uncomment this for a graph of the stock value itself
+    minClosePrice = stockDataFrame['Close'].min()
+    maxClosePrice = stockDataFrame['Close'].max()
+    plt.plot(stockDataFrame.index, stockDataFrame['Close'])
+    plt.title("AAPL Stock Value from 2014 to 2016")
+    plt.xlabel("Dates (Year-Month)")
+    plt.ylabel("Stock Values in Points")
+    plt.ylim(float(int(minClosePrice - 5.0)), float(int(maxClosePrice + 5.0)))
+    plt.show()
+    """
+
+    just_close_vals = stockDataFrame['Close'].values
     raw_training_data = []
     raw_x_train_data = []
     raw_y_train_data = []
-    eighty_percent = int(len(just_close_vals) * .8)
+    eighty_percent = int(len(just_close_vals) * 0.8)
     
     # This is for the training data which is for the first 80% of the data
     for index in range(5, eighty_percent, 5):
@@ -95,6 +80,7 @@ def main():
     model.add(Dense(1, activation='relu'))
     model.compile(optimizer='adam', loss='mean_squared_error')
     model.fit(x_train, y_train, epochs=3, verbose=2, validation_data=(x_test, y_test))
+
     # model.add(Dropout(0.2)) --> Unsure if needed, dropout is where random neurons are ignored in training temporarily
 
     # test_loss = model.evaluate(y_train, y_test, verbose=0)
@@ -103,10 +89,13 @@ def main():
     # test_predictions = model.predict(test_data[:-1])
     # print(test_predictions)
 
+    plt.title("Network Results")
     plt.plot(test_data, label='Test Data')
     plt.plot(training_data, label='Training')
     plt.legend()
     plt.show()
+
+    # I think maybe x_train needs to be split in half to be the x and y and then the validation/ test remains the remaining 20%
 
 if __name__ == "__main__":
   main()
