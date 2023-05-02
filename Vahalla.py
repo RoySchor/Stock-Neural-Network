@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import pandas as pd
+import datetime
 # from tensorflow import keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
@@ -9,6 +10,7 @@ from tensorflow.keras.layers import Dense, LSTM
 
 
 def main():
+    """
     # Start and end date of the data we will reading in
     start_date_1 = '2013-12-31'
     end_date_1 = '2016-01-01'
@@ -96,6 +98,85 @@ def main():
     plt.show()
 
     # I think maybe x_train needs to be split in half to be the x and y and then the validation/ test remains the remaining 20%
+
+    """
+    # File we read in
+    stockDataFrame = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt')
+    # we only take in the Date and Close values from the CSV
+    stockDataFrame = stockDataFrame[['Date', 'Close']]
+    # Converts all Dates of type string to type Datetime
+    stockDataFrame['Date'] = stockDataFrame['Date'].apply(convertToDate)
+    # need to remove the first column (index column) as its useless data/ space
+    stockDataFrame.index = stockDataFrame.pop('Date')
+    
+    # Outputs the graph of the stock value
+    # plt.title("AAPL Stock Value")
+    # plt.plot(stockDataFrame.index, stockDataFrame['Close'])
+    # plt.xlabel("Dates")
+    # plt.ylabel("Stock Values in Points")
+    # plt.show()
+
+    startDate = stockDataFrame.index[0]
+    endDate = stockDataFrame.index[-1]
+    segmentedDf = dfToWindowedDf(stockDataFrame, startDate, endDate, pastBasisDays=1)
+    print(segmentedDf)
+
+# Here we will break the data frame into windows where we split it into 3 days and predict the fifth
+def dfToWindowedDf(rawDataFrame, startDate, endDate, pastBasisDays=1):
+  targetDate = startDate
+
+  dates, X, Y = [], [], []
+
+  lastTime = False
+  while True:
+    dataFrameSubset = rawDataFrame.loc[:targetDate].tail(pastBasisDays + 1)
+        
+    if len(dataFrameSubset) != pastBasisDays + 1:
+      print(f'Error: Window of size {pastBasisDays} is too large for date {targetDate}')
+      return
+
+    values = dataFrameSubset['Close'].to_numpy()
+    x, y = values[:-1], values[-1]
+
+    dates.append(targetDate)
+    X.append(x)
+    Y.append(y)
+
+    nextWeek = rawDataFrame.loc[targetDate:targetDate + datetime.timedelta(days=7)]
+    nextDatetimeStr = str(nextWeek.head(2).tail(1).index.values[0])
+    nextDateStr = nextDatetimeStr.split('T')[0]
+    yearMonthDay = nextDateStr.split('-')
+    year, month, day = yearMonthDay
+    nextDate = datetime.datetime(day=int(day), month=int(month), year=int(year))
+        
+    if lastTime:
+      break
+        
+    targetDate = nextDate
+
+    if targetDate == endDate:
+      lastTime = True
+        
+  returnDataFrame = pd.DataFrame({})
+  returnDataFrame['Target Date'] = dates
+      
+  X = np.array(X)
+  for i in range(0, pastBasisDays):
+    X[:, i]
+    returnDataFrame[f'Target-{pastBasisDays - i}'] = X[:, i]
+      
+  returnDataFrame['Target'] = Y
+
+  return returnDataFrame
+
+
+# Each date in the dataframe is a string but we want it as a Date object
+# thus this function converts a string to Datetime object
+def convertToDate(stringDate):
+  # splits based on hyphen as the string of date is seperated by hyphen
+   splitValue = stringDate.split('-')
+   year, month, day = int(splitValue[0]), int(splitValue[1]), int(splitValue[2])
+   return datetime.datetime(year=year, month=month, day=day)
 
 if __name__ == "__main__":
   main()
