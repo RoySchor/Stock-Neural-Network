@@ -108,13 +108,6 @@ def main():
     stock_data_frame['Date'] = stock_data_frame['Date'].apply(convert_to_date)
     # need to remove the first column (index column) as its useless data
     stock_data_frame.index = stock_data_frame.pop('Date')
-    
-    # Outputs the graph of the stock value
-    # plt.title("AAPL Stock Value")
-    # plt.plot(stock_data_frame.index, stock_data_frame['Close'])
-    # plt.xlabel("Dates")
-    # plt.ylabel("Stock Values in Points")
-    # plt.show()
 
     windowed_df = split_df_to_windowed_df(stock_data_frame, window_size=4)
     windowed_df = windowed_df.reset_index()
@@ -126,15 +119,47 @@ def main():
     # takes all past data points exluding date and target date data, so first and last
     middle_data_segment = df_npied[:, 1:-1]
     # reshaped by length of dates, the size of the middle part, and 1 for us as this is a univariate problem
-    X = middle_data_segment.reshape((len(dates), middle_data_segment.shape[1], 1))
-    Y = df_npied[:, -1]
+    total_x_data = middle_data_segment.reshape((len(dates), middle_data_segment.shape[1], 1))
+    total_y_data = df_npied[:, -1]
     # Unknown why I have to do this but found it fixed a bug
-    X = X.astype(np.float32)
-    Y = Y.astype(np.float32)
-    # dates.shape = (8360), X.shape = (8360,4,1) (4 steps in past) (1 float variable), 
-    print(dates.shape, X.shape, Y.shape)
+    total_x_data = total_x_data.astype(np.float32)
+    total_y_data = total_y_data.astype(np.float32)
+    # dates.shape = (8360), x.shape = (8360,4,1) (4 steps in past) (1 float variable), y.shape = (8360)
+    print(dates.shape, total_x_data.shape, total_y_data.shape)
     
+    # Now we create training, testing, and validation data
+    # We will do 80% training, the remaining 20% is split 10-10 into validation and testing
+    eighty_split = int(len(dates) * .8)
+    ninety_split = int(len(dates) * .9)
+    # Up until 80%
+    dates_train, x_train, y_train = dates[:eighty_split], total_x_data[:eighty_split], total_y_data[:eighty_split]
+    # between 80% - 90%
+    dates_validation, x_validation, y_validation = dates[eighty_split:ninety_split], total_x_data[eighty_split:ninety_split], total_y_data[eighty_split:ninety_split]
+    # 90% - end
+    dates_test, x_test, y_test = dates[ninety_split:], total_x_data[ninety_split:], total_y_data[ninety_split:]
 
+    # To see graphs uncomment the following:
+    # show_total_stock_graph(stock_data_frame)
+    # show_data_split_graph(dates_train, y_train, dates_validation, y_validation, dates_test, y_test)
+
+
+def show_data_split_graph(training_dates, y_train, validation_dates, y_validation, testing_dates, y_test):
+  plt.title("Total Data Set Split into Training(80%), Validation(10%), Test(10%)")
+  plt.plot(training_dates, y_train)
+  plt.plot(validation_dates, y_validation)
+  plt.plot(testing_dates, y_test)
+  plt.xlabel("Dates")
+  plt.ylabel("Stock Values in Points")
+  plt.legend(['Train', 'Validation', 'Test'])
+  plt.show()
+
+# Outputs the graph of the stock value
+def show_total_stock_graph(stock_data_frame):
+  plt.title("AAPL Stock Value")
+  plt.plot(stock_data_frame.index, stock_data_frame['Close'])
+  plt.xlabel("Dates")
+  plt.ylabel("Stock Values in Points")
+  plt.show()
 
 # This function splits the dataframe into windows to feed into the network
 # Each row now includes a date, followed by previous 4 days, and final column is prediction day's data
