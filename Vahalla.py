@@ -131,6 +131,7 @@ def main():
     # We will do 80% training, the remaining 20% is split 10-10 into validation and testing
     eighty_split = int(len(dates) * .8)
     ninety_split = int(len(dates) * .9)
+
     # Up until 80%
     dates_train, x_train, y_train = dates[:eighty_split], total_x_data[:eighty_split], total_y_data[:eighty_split]
     # between 80% - 90%
@@ -138,17 +139,21 @@ def main():
     # 90% - end
     dates_test, x_test, y_test = dates[ninety_split:], total_x_data[ninety_split:], total_y_data[ninety_split:]
 
+    # Creating the Network:
+    
+
     # To see graphs uncomment the following:
     # show_total_stock_graph(stock_data_frame)
-    # show_data_split_graph(dates_train, y_train, dates_validation, y_validation, dates_test, y_test)
+    show_data_split_graph(dates_train, y_train, dates_validation, y_validation, dates_test, y_test)
 
 
 def show_data_split_graph(training_dates, y_train, validation_dates, y_validation, testing_dates, y_test):
   plt.title("Total Data Set Split into Training(80%), Validation(10%), Test(10%)")
-  plt.plot(training_dates, y_train)
-  plt.plot(validation_dates, y_validation)
-  plt.plot(testing_dates, y_test)
+  plt.plot(training_dates, y_train, color='red')
+  plt.plot(validation_dates, y_validation, color='blue')
+  plt.plot(testing_dates, y_test, color='green')
   plt.xlabel("Dates")
+
   plt.ylabel("Stock Values in Points")
   plt.legend(['Train', 'Validation', 'Test'])
   plt.show()
