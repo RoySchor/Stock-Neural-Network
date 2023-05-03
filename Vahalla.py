@@ -118,57 +118,25 @@ def main():
 
     startDate = stockDataFrame.index[0]
     endDate = stockDataFrame.index[-1]
-    segmentedDf = dfToWindowedDf(stockDataFrame, startDate, endDate, pastBasisDays=1)
-    print(segmentedDf)
+    # print(stockDataFrame)
 
-# Here we will break the data frame into windows where we split it into 3 days and predict the fifth
-def dfToWindowedDf(rawDataFrame, startDate, endDate, pastBasisDays=1):
-  targetDate = startDate
+    windowDf = window_data(stockDataFrame, windowSize=4)
+    # print(windowDf)
 
-  dates, X, Y = [], [], []
+# This function splits the dataframe into windows to feed into the network
+# Each row now includes a date, the previous 4 days of data, and the final column is the target prediction day's data
+def window_data(data, windowSize=4):
+  # Creates our temporary datafram
+  windowed_data = pd.DataFrame()
 
-  lastTime = False
-  while True:
-    dataFrameSubset = rawDataFrame.loc[:targetDate].tail(pastBasisDays + 1)
-        
-    if len(dataFrameSubset) != pastBasisDays + 1:
-      print(f'Error: Window of size {pastBasisDays} is too large for date {targetDate}')
-      return
+  for index in range(windowSize, 0, -1):
+    # appends to each row in df past 4 days of data, one day at a time and shifts the entire data doing so
+    windowed_data[f'Target-{index}'] = data['Close'].shift(index)
 
-    values = dataFrameSubset['Close'].to_numpy()
-    x, y = values[:-1], values[-1]
+  windowed_data['Target'] = data['Close']
 
-    dates.append(targetDate)
-    X.append(x)
-    Y.append(y)
-
-    nextWeek = rawDataFrame.loc[targetDate:targetDate + datetime.timedelta(days=7)]
-    nextDatetimeStr = str(nextWeek.head(2).tail(1).index.values[0])
-    nextDateStr = nextDatetimeStr.split('T')[0]
-    yearMonthDay = nextDateStr.split('-')
-    year, month, day = yearMonthDay
-    nextDate = datetime.datetime(day=int(day), month=int(month), year=int(year))
-        
-    if lastTime:
-      break
-        
-    targetDate = nextDate
-
-    if targetDate == endDate:
-      lastTime = True
-        
-  returnDataFrame = pd.DataFrame({})
-  returnDataFrame['Target Date'] = dates
-      
-  X = np.array(X)
-  for i in range(0, pastBasisDays):
-    X[:, i]
-    returnDataFrame[f'Target-{pastBasisDays - i}'] = X[:, i]
-      
-  returnDataFrame['Target'] = Y
-
-  return returnDataFrame
-
+  # Removes all rows that are missing some data - any incomplete windows that would mess up training
+  return windowed_data.dropna()
 
 # Each date in the dataframe is a string but we want it as a Date object
 # thus this function converts a string to Datetime object
