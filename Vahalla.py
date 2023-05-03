@@ -3,105 +3,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pandas as pd
 import datetime
-# from tensorflow import keras
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
-# from tensorflow.keras.optimizers import RMSprop
-
+from tensorflow.keras import layers
 
 def main():
-    """
-    # Start and end date of the data we will reading in
-    start_date_1 = '2013-12-31'
-    end_date_1 = '2016-01-01'
-    # File we read in, we only read the Date and Close values from the CSV
-    stockDataFrame = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt', usecols=['Date', 'Close'], dtype={'Date': 'str', 'Close': 'float'}, parse_dates=['Date'], index_col='Date')
-    # Reads in all the data, then slices it to only take the data after the start date
-    stockDataFrame = stockDataFrame.loc[start_date_1:end_date_1]
-
-    #### Uncomment this for a graph of the stock value itself
-    # minClosePrice = stockDataFrame['Close'].min()
-    # maxClosePrice = stockDataFrame['Close'].max()
-    # plt.plot(stockDataFrame.index, stockDataFrame['Close'])
-    # plt.title("AAPL Stock Value from 2014 to 2016")
-    # plt.xlabel("Dates (Year-Month)")
-    # plt.ylabel("Stock Values in Points")
-    # plt.ylim(float(int(minClosePrice - 5.0)), float(int(maxClosePrice + 5.0)))
-    # plt.show()
-
-    # This normalizes the Closing prices to be btwn 0-1, based off of the max price
-    stockDataFrame['Close'] = stockDataFrame['Close'].apply(lambda x: x/stockDataFrame['Close'].max())
-
-    just_close_vals = stockDataFrame['Close'].values
-    raw_training_data = []
-    raw_x_train_data = []
-    raw_y_train_data = []
-    eighty_percent = int(len(just_close_vals) * 0.8)
-
-    # This is for the training data which is for the first 80% of the data
-    for index in range(5, eighty_percent, 5):
-      x_train_vals = just_close_vals[index - 5:index - 1]
-      y_train_vals = just_close_vals[index - 1]
-
-      raw_training_data.append(x_train_vals)
-      # Need to add the three 0's, because when we np.array it we do matric multiplication 
-      # and we need the dimension to be equal for the multiplication to work
-      raw_training_data.append([y_train_vals, 0, 0, 0])
-      raw_x_train_data.append(x_train_vals)
-      raw_y_train_data.append([y_train_vals])
-
-    # This is for the last 20% of the data which is the testing data
-    raw_test_data = []
-    raw_x_test_data = []
-    raw_y_test_data = []
-    for index in range(eighty_percent, len(just_close_vals), 5):
-      x_test_vals = just_close_vals[index - 5:index - 1]
-      y_test_vals = just_close_vals[index - 1]
-
-      raw_test_data.append(x_test_vals)
-      raw_test_data.append([y_test_vals, 0, 0, 0])
-      raw_x_test_data.append(x_test_vals)
-      raw_y_test_data.append([y_test_vals])
-
-    # Need to reshape the data using np arrays
-    training_data = np.array(raw_training_data)
-    x_train = np.array(raw_x_train_data)
-    y_train = np.array(raw_y_train_data)
-    test_data = np.array(raw_test_data)
-    x_test = np.array(raw_x_test_data)
-    y_test = np.array(raw_y_test_data)
-    
-    # LSTM Paramater layout:
-    # model.add(keras.layers.LSTM(hidden_nodes, input_shape=(window, num_features), consume_less="mem"))
-
-    model = Sequential()
-    # Shape is 4 --> 1 as we need 4 input neurons (1 for each close value) outputing 1 neuron (the fifth close value)
-    model.add(LSTM(64, input_shape=(4, 1)))
-    model.add(Dense(1, activation='relu'))
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(x_train, y_train, epochs=3, verbose=2, validation_data=(x_test, y_test))
-
-    # model.add(Dropout(0.2)) --> Unsure if needed, dropout is where random neurons are ignored in training temporarily
-
-    # test_loss = model.evaluate(y_train, y_test, verbose=0)
-    # print('Test loss:', test_loss)
-
-    # test_predictions = model.predict(y_test)
-    # print(test_predictions)
-
-    plt.title("Network Results")
-    plt.plot(y_test, label='y Test Data')
-    # plt.plot(test_predictions, label='Network Test Predictions')
-    # plt.plot(test_data, label='Test Data')
-    # plt.plot(training_data, label='Training')
-    plt.legend()
-    plt.show()
-
-    # I think maybe x_train needs to be split in half to be the x and y and then the validation/ test remains the remaining 20%
-
-    """
     # File we read in
-    stock_data_frame = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt')
+    stock_data_frame = pd.read_csv('aapl.us.txt')
     # we only take in the Date and Close values from the CSV
     stock_data_frame = stock_data_frame[['Date', 'Close']]
     # Converts all Dates of type string to type Datetime
@@ -110,6 +19,13 @@ def main():
     stock_data_frame.index = stock_data_frame.pop('Date')
 
     windowed_df = split_df_to_windowed_df(stock_data_frame, window_size=4)
+
+    # Here we slice the windowed dataframe greatly
+    # We believe that the network training all the data actually harms its predictions 
+    # as it is not training on the most volatile part (the recent history), 
+    # thus we are now trying to only train on recent history (past 3 years not all 30+)
+    start_date = "2015-01-07"
+    windowed_df = windowed_df.loc[start_date:]
     windowed_df = windowed_df.reset_index()
 
     # Now need to fix data to be numpy and reshape it to fit in LSTM
@@ -124,9 +40,8 @@ def main():
     # Unknown why I have to do this but found it fixed a bug
     total_x_data = total_x_data.astype(np.float32)
     total_y_data = total_y_data.astype(np.float32)
-    # dates.shape = (8360), x.shape = (8360,4,1) (4 steps in past) (1 float variable), y.shape = (8360)
-    print(dates.shape, total_x_data.shape, total_y_data.shape)
-    
+    # dates.shape = (8360), total_x_data.shape = (8360,4,1) (4 steps in past) (1 float variable), total_y_data.shape = (8360)
+
     # Now we create training, testing, and validation data
     # We will do 80% training, the remaining 20% is split 10-10 into validation and testing
     eighty_split = int(len(dates) * .8)
@@ -139,13 +54,78 @@ def main():
     # 90% - end
     dates_test, x_test, y_test = dates[ninety_split:], total_x_data[ninety_split:], total_y_data[ninety_split:]
 
-    # Creating the Network:
-    
+    # Creating the Network 4,1 for 4 inputs dates one output
+    model = Sequential()
+    model.add(layers.LSTM(64, input_shape=(4,1)))
+    model.add(layers.Dense(32, activation='relu'))
+    model.add(layers.Dense(32, activation='relu'))
+    model.add(layers.Dense(1, activation='relu'))
+    model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mean_absolute_error'])
+
+    model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=200)
+    training_predictions = model.predict(x_train).flatten()
+    validation_predictions = model.predict(x_validation).flatten()
+    test_predictions = model.predict(x_test).flatten()
 
     # To see graphs uncomment the following:
     # show_total_stock_graph(stock_data_frame)
     show_data_split_graph(dates_train, y_train, dates_validation, y_validation, dates_test, y_test)
+    network_training_prediction_graph(dates_train, training_predictions, y_train)
+    network_validation_prediction_graph(dates_validation, validation_predictions, y_validation)
+    network_testing_prediction_graph(dates_test, test_predictions, y_test)
+    all_predictions_graph(dates_train, dates_validation, dates_test, training_predictions, validation_predictions, test_predictions, y_train, y_validation, y_test)
+    
+    # stock_data_frame = stock_data_frame.loc[start_date:]
+    # plt.title("Sliced AAPL Stock Value Timeline")
+    # plt.plot(stock_data_frame.index, stock_data_frame['Close'])
+    # plt.xlabel("Dates")
+    # plt.ylabel("Stock Values in Points")
+    # plt.show()
 
+def all_predictions_graph(training_dates, validation_dates, testing_dates, training_predictions, validation_predictions, test_predictions, y_train, y_val, y_test):
+  plt.title("Training, Validation, and Testing Predictions vs Real Observation")
+  plt.plot(training_dates, training_predictions)
+  plt.plot(training_dates, y_train)
+  plt.plot(validation_dates, validation_predictions)
+  plt.plot(validation_dates, y_val)
+  plt.plot(testing_dates, test_predictions)
+  plt.plot(testing_dates, y_test)
+  plt.legend(['Training Predictions', 
+              'Training Observations',
+              'Validation Predictions',
+              'Validation Observations',
+              'Testing Predictions',
+              'Testing Observations'])
+  plt.xlabel("Dates")
+  plt.ylabel("Stock Value in Points")
+  plt.show()
+
+def network_testing_prediction_graph(testing_dates, test_predictions, y_test):
+  plt.title("Testing Predictions vs Observations of Network")
+  plt.plot(testing_dates, test_predictions)
+  plt.plot(testing_dates, y_test)
+  plt.xlabel("Dates")
+  plt.ylabel("Stock Value in Points")
+  plt.legend(['Testing Predictions', 'Testing Observations'])
+  plt.show()
+
+def network_validation_prediction_graph(validation_dates, validation_predictions, y_val):
+  plt.title("Validation Predictions vs Observations of Network")
+  plt.plot(validation_dates, validation_predictions)
+  plt.plot(validation_dates, y_val)
+  plt.xlabel("Dates")
+  plt.ylabel("Stock Value in Points")
+  plt.legend(['Validation Predictions', 'Validation Observations'])
+  plt.show()
+
+def network_training_prediction_graph(training_dates, training_predictions, y_train):
+  plt.title("Training Predictions vs Observations of Network")
+  plt.plot(training_dates, training_predictions)
+  plt.plot(training_dates, y_train)
+  plt.xlabel("Dates")
+  plt.ylabel("Stock Value in Points")
+  plt.legend(['Training Predictions', 'Training Observations'])
+  plt.show()
 
 def show_data_split_graph(training_dates, y_train, validation_dates, y_validation, testing_dates, y_test):
   plt.title("Total Data Set Split into Training(80%), Validation(10%), Test(10%)")
@@ -153,10 +133,10 @@ def show_data_split_graph(training_dates, y_train, validation_dates, y_validatio
   plt.plot(validation_dates, y_validation, color='blue')
   plt.plot(testing_dates, y_test, color='green')
   plt.xlabel("Dates")
-
   plt.ylabel("Stock Values in Points")
   plt.legend(['Train', 'Validation', 'Test'])
   plt.show()
+
 
 # Outputs the graph of the stock value
 def show_total_stock_graph(stock_data_frame):
@@ -165,6 +145,7 @@ def show_total_stock_graph(stock_data_frame):
   plt.xlabel("Dates")
   plt.ylabel("Stock Values in Points")
   plt.show()
+
 
 # This function splits the dataframe into windows to feed into the network
 # Each row now includes a date, followed by previous 4 days, and final column is prediction day's data
@@ -179,6 +160,7 @@ def split_df_to_windowed_df(data, window_size=4):
   windowed_df['Target'] = data['Close']
   # Removes all rows that are missing some data - any incomplete windows that would mess up training
   return windowed_df.dropna()
+
 
 # Each date in the dataframe is a string but we want it as a Date object
 # thus this function converts a string to Datetime object
