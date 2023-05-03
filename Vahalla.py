@@ -7,6 +7,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras import layers
+from tensorflow.keras.callbacks import LambdaCallback
 
 def main():
     # File we read in
@@ -62,7 +63,16 @@ def main():
     model.add(layers.Dense(1, activation='relu'))
     model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mean_absolute_error'])
 
-    model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=200)
+    # Call back function to get the loss and val_mean_absolute_error to graph it and see our accuracy
+    history = []
+    history.appendloss_history()
+    history_callback = []
+    # history_callback.append(LambdaCallback(on_epoch_end=on_epoch_end))
+    my_callback = LambdaCallback(on_epoch_end=on_epoch_end)
+
+    history = Histories()
+
+    model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=20, callbacks=[history])
     training_predictions = model.predict(x_train).flatten()
     validation_predictions = model.predict(x_validation).flatten()
     test_predictions = model.predict(x_test).flatten()
@@ -81,6 +91,33 @@ def main():
     # plt.xlabel("Dates")
     # plt.ylabel("Stock Values in Points")
     # plt.show()
+
+    # Two graphs one of loss over time and one of val mean absolute error over time
+
+
+# This function splits the dataframe into windows to feed into the network
+# Each row now includes a date, followed by previous 4 days, and final column is prediction day's data
+def split_df_to_windowed_df(data, window_size=4):
+  # Creates our temporary datafram
+  windowed_df = pd.DataFrame()
+
+  for index in range(window_size, 0, -1):
+    # appends to each row in df past 4 days of data, one day at a time and shifts the entire data doing so
+    windowed_df[f'Target-{index}'] = data['Close'].shift(index)
+
+  windowed_df['Target'] = data['Close']
+  # Removes all rows that are missing some data - any incomplete windows that would mess up training
+  return windowed_df.dropna()
+
+
+# Each date in the dataframe is a string but we want it as a Date object
+# thus this function converts a string to Datetime object
+def convert_to_date(stringDate):
+  # splits based on hyphen as the string of date is seperated by hyphen
+   split_value = stringDate.split('-')
+   year, month, day = int(split_value[0]), int(split_value[1]), int(split_value[2])
+   return datetime.datetime(year=year, month=month, day=day)
+
 
 def all_predictions_graph(training_dates, validation_dates, testing_dates, training_predictions, validation_predictions, test_predictions, y_train, y_val, y_test):
   plt.title("Training, Validation, and Testing Predictions vs Real Observation")
@@ -137,7 +174,6 @@ def show_data_split_graph(training_dates, y_train, validation_dates, y_validatio
   plt.legend(['Train', 'Validation', 'Test'])
   plt.show()
 
-
 # Outputs the graph of the stock value
 def show_total_stock_graph(stock_data_frame):
   plt.title("AAPL Stock Value")
@@ -145,30 +181,6 @@ def show_total_stock_graph(stock_data_frame):
   plt.xlabel("Dates")
   plt.ylabel("Stock Values in Points")
   plt.show()
-
-
-# This function splits the dataframe into windows to feed into the network
-# Each row now includes a date, followed by previous 4 days, and final column is prediction day's data
-def split_df_to_windowed_df(data, window_size=4):
-  # Creates our temporary datafram
-  windowed_df = pd.DataFrame()
-
-  for index in range(window_size, 0, -1):
-    # appends to each row in df past 4 days of data, one day at a time and shifts the entire data doing so
-    windowed_df[f'Target-{index}'] = data['Close'].shift(index)
-
-  windowed_df['Target'] = data['Close']
-  # Removes all rows that are missing some data - any incomplete windows that would mess up training
-  return windowed_df.dropna()
-
-
-# Each date in the dataframe is a string but we want it as a Date object
-# thus this function converts a string to Datetime object
-def convert_to_date(stringDate):
-  # splits based on hyphen as the string of date is seperated by hyphen
-   split_value = stringDate.split('-')
-   year, month, day = int(split_value[0]), int(split_value[1]), int(split_value[2])
-   return datetime.datetime(year=year, month=month, day=day)
 
 if __name__ == "__main__":
   main()
