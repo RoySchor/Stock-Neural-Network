@@ -101,49 +101,61 @@ def main():
 
     """
     # File we read in
-    stockDataFrame = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt')
+    stock_data_frame = pd.read_csv('/Users/royschor/Desktop/Core Course/archive/aapl.us.txt')
     # we only take in the Date and Close values from the CSV
-    stockDataFrame = stockDataFrame[['Date', 'Close']]
+    stock_data_frame = stock_data_frame[['Date', 'Close']]
     # Converts all Dates of type string to type Datetime
-    stockDataFrame['Date'] = stockDataFrame['Date'].apply(convertToDate)
-    # need to remove the first column (index column) as its useless data/ space
-    stockDataFrame.index = stockDataFrame.pop('Date')
+    stock_data_frame['Date'] = stock_data_frame['Date'].apply(convert_to_date)
+    # need to remove the first column (index column) as its useless data
+    stock_data_frame.index = stock_data_frame.pop('Date')
     
     # Outputs the graph of the stock value
     # plt.title("AAPL Stock Value")
-    # plt.plot(stockDataFrame.index, stockDataFrame['Close'])
+    # plt.plot(stock_data_frame.index, stock_data_frame['Close'])
     # plt.xlabel("Dates")
     # plt.ylabel("Stock Values in Points")
     # plt.show()
 
-    startDate = stockDataFrame.index[0]
-    endDate = stockDataFrame.index[-1]
-    # print(stockDataFrame)
+    windowed_df = split_df_to_windowed_df(stock_data_frame, window_size=4)
+    windowed_df = windowed_df.reset_index()
 
-    windowDf = window_data(stockDataFrame, windowSize=4)
-    # print(windowDf)
+    # Now need to fix data to be numpy and reshape it to fit in LSTM
+    df_npied = windowed_df.to_numpy()
+    # grab only all the dates, first column is dates
+    dates = df_npied[:, 0]
+    # takes all past data points exluding date and target date data, so first and last
+    middle_data_segment = df_npied[:, 1:-1]
+    # reshaped by length of dates, the size of the middle part, and 1 for us as this is a univariate problem
+    X = middle_data_segment.reshape((len(dates), middle_data_segment.shape[1], 1))
+    Y = df_npied[:, -1]
+    # Unknown why I have to do this but found it fixed a bug
+    X = X.astype(np.float32)
+    Y = Y.astype(np.float32)
+    # dates.shape = (8360), X.shape = (8360,4,1) (4 steps in past) (1 float variable), 
+    print(dates.shape, X.shape, Y.shape)
+    
+
 
 # This function splits the dataframe into windows to feed into the network
-# Each row now includes a date, the previous 4 days of data, and the final column is the target prediction day's data
-def window_data(data, windowSize=4):
+# Each row now includes a date, followed by previous 4 days, and final column is prediction day's data
+def split_df_to_windowed_df(data, window_size=4):
   # Creates our temporary datafram
-  windowed_data = pd.DataFrame()
+  windowed_df = pd.DataFrame()
 
-  for index in range(windowSize, 0, -1):
+  for index in range(window_size, 0, -1):
     # appends to each row in df past 4 days of data, one day at a time and shifts the entire data doing so
-    windowed_data[f'Target-{index}'] = data['Close'].shift(index)
+    windowed_df[f'Target-{index}'] = data['Close'].shift(index)
 
-  windowed_data['Target'] = data['Close']
-
+  windowed_df['Target'] = data['Close']
   # Removes all rows that are missing some data - any incomplete windows that would mess up training
-  return windowed_data.dropna()
+  return windowed_df.dropna()
 
 # Each date in the dataframe is a string but we want it as a Date object
 # thus this function converts a string to Datetime object
-def convertToDate(stringDate):
+def convert_to_date(stringDate):
   # splits based on hyphen as the string of date is seperated by hyphen
-   splitValue = stringDate.split('-')
-   year, month, day = int(splitValue[0]), int(splitValue[1]), int(splitValue[2])
+   split_value = stringDate.split('-')
+   year, month, day = int(split_value[0]), int(split_value[1]), int(split_value[2])
    return datetime.datetime(year=year, month=month, day=day)
 
 if __name__ == "__main__":
