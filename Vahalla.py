@@ -7,7 +7,18 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras import layers
-from tensorflow.keras.callbacks import LambdaCallback
+from tensorflow.keras.callbacks import Callback
+
+class Histories(Callback):
+  def on_train_begin(self, logs={}):
+    self.losses = []
+    self.val_mean_absolute_error = []
+    self.validation_loss = []
+
+  def on_epoch_end(self, batch, logs={}):
+    self.losses.append(logs.get('loss'))
+    self.validation_loss.append(logs.get('val_loss'))
+    self.mean_absolute_error.append(logs.get('val_mean_absolute_error'))
 
 def main():
     # File we read in
@@ -25,7 +36,7 @@ def main():
     # We believe that the network training all the data actually harms its predictions 
     # as it is not training on the most volatile part (the recent history), 
     # thus we are now trying to only train on recent history (past 3 years not all 30+)
-    start_date = "2018-05-04"
+    start_date = "1983-01-01"
     end_date = "2023-05-03"
     windowed_df = windowed_df.loc[start_date:end_date]
     windowed_df = windowed_df.reset_index()
@@ -65,45 +76,25 @@ def main():
     model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mean_absolute_error'])
 
     # Call back function to get the loss and val_mean_absolute_error to graph it and see our accuracy
-    # history = []
-    # history.appendloss_history()
-    # history_callback = []
-    # # history_callback.append(LambdaCallback(on_epoch_end=on_epoch_end))
-    # my_callback = LambdaCallback(on_epoch_end=on_epoch_end)
+    history = Histories()
 
-    # history = Histories()
-
-    #define history so that I can plot the loss of this model
-    #define history_callback so that I can plot the loss of this model
-    # history = Histories()
-    # what is the error here?
-    # history_callback = LambdaCallback(on_epoch_end=on_epoch_end)
-    # history = model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=20, callbacks=[history_callback])
-
-
-    # model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=20, callbacks=[history])
-    history = model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=20)
+    fits = model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=11, callbacks=[history])
     training_predictions = model.predict(x_train).flatten()
     validation_predictions = model.predict(x_validation).flatten()
     test_predictions = model.predict(x_test).flatten()
 
+    print(history.val_mean_absolute_error)
     # To see graphs uncomment the following:
+
     # show_total_stock_graph(stock_data_frame)
-    show_data_split_graph(dates_train, y_train, dates_validation, y_validation, dates_test, y_test)
-    network_training_prediction_graph(dates_train, training_predictions, y_train)
-    network_validation_prediction_graph(dates_validation, validation_predictions, y_validation)
-    network_testing_prediction_graph(dates_test, test_predictions, y_test)
+    # show_sliced_stock_graph(stock_data_frame, start_date, end_date)
+    # show_data_split_graph(dates_train, y_train, dates_validation, y_validation, dates_test, y_test)
+    # network_training_prediction_graph(dates_train, training_predictions, y_train)
+    # network_validation_prediction_graph(dates_validation, validation_predictions, y_validation)
+    # network_testing_prediction_graph(dates_test, test_predictions, y_test)
     all_predictions_graph(dates_train, dates_validation, dates_test, training_predictions, validation_predictions, test_predictions, y_train, y_validation, y_test)
-    plot_loss(history)
+    both_loss_graphs(fits, history)
 
-    # stock_data_frame = stock_data_frame.loc[start_date:]
-    # plt.title("Sliced AAPL Stock Value Timeline")
-    # plt.plot(stock_data_frame.index, stock_data_frame['Close'])
-    # plt.xlabel("Dates")
-    # plt.ylabel("Stock Values in Points")
-    # plt.show()
-
-    # Two graphs one of loss over time and one of val mean absolute error over time
 
 
 # This function splits the dataframe into windows to feed into the network
@@ -130,6 +121,28 @@ def convert_to_date(stringDate):
    return datetime.datetime(year=year, month=month, day=day)
 
 
+# Outputs two graphs of our Network's loss over time and mean Absolute Error loss
+# Can't combine into one as scale is far different for both
+def both_loss_graphs(model_history, history):
+  plt.title("Loss over Time")
+  plt.plot(model_history.epoch, history.losses)
+  plt.xlabel("Epochs")
+  plt.ylabel("Loss Value in Percent")
+  plt.show()
+
+  plt.title("Validation Mean Absolute Error Loss over Time")
+  plt.plot(model_history.epoch, history.val_mean_absolute_error)
+  plt.xlabel("Epochs")
+  plt.ylabel("Absolute Error Loss Value in Percent")
+  plt.show()
+
+  plt.title("Validation Loss over Time")
+  plt.plot(model_history.epoch, history.validation_loss)
+  plt.xlabel("Epochs")
+  plt.ylabel("Validation_loss Loss Value in Percent")
+  plt.show()
+
+# Outputs the graph of all our Network's predictions vs the real observation data combined
 def all_predictions_graph(training_dates, validation_dates, testing_dates, training_predictions, validation_predictions, test_predictions, y_train, y_val, y_test):
   plt.title("Training, Validation, and Testing Predictions vs Real Observation")
   plt.plot(training_dates, training_predictions)
@@ -148,6 +161,7 @@ def all_predictions_graph(training_dates, validation_dates, testing_dates, train
   plt.ylabel("Stock Value in Points")
   plt.show()
 
+# Outputs the graph of our Networks testing predictions vs the real testing observation data
 def network_testing_prediction_graph(testing_dates, test_predictions, y_test):
   plt.title("Testing Predictions vs Observations of Network")
   plt.plot(testing_dates, test_predictions)
@@ -157,6 +171,7 @@ def network_testing_prediction_graph(testing_dates, test_predictions, y_test):
   plt.legend(['Testing Predictions', 'Testing Observations'])
   plt.show()
 
+# Outputs the graph of our Networks validation predictions vs the real validation observation data
 def network_validation_prediction_graph(validation_dates, validation_predictions, y_val):
   plt.title("Validation Predictions vs Observations of Network")
   plt.plot(validation_dates, validation_predictions)
@@ -166,6 +181,7 @@ def network_validation_prediction_graph(validation_dates, validation_predictions
   plt.legend(['Validation Predictions', 'Validation Observations'])
   plt.show()
 
+# Outputs the graph of our Networks training predictions vs the real training observation data
 def network_training_prediction_graph(training_dates, training_predictions, y_train):
   plt.title("Training Predictions vs Observations of Network")
   plt.plot(training_dates, training_predictions)
@@ -175,6 +191,7 @@ def network_training_prediction_graph(training_dates, training_predictions, y_tr
   plt.legend(['Training Predictions', 'Training Observations'])
   plt.show()
 
+# Outputs the graph of our three data sets split by section
 def show_data_split_graph(training_dates, y_train, validation_dates, y_validation, testing_dates, y_test):
   plt.title("Total Data Set Split into Training(80%), Validation(10%), Test(10%)")
   plt.plot(training_dates, y_train, color='red')
@@ -185,20 +202,21 @@ def show_data_split_graph(training_dates, y_train, validation_dates, y_validatio
   plt.legend(['Train', 'Validation', 'Test'])
   plt.show()
 
+# Outputs the graph of the stock value sliced to our testing dates
+def show_sliced_stock_graph(stock_data_frame, start_date, end_date):
+  stock_data_frame = stock_data_frame.loc[start_date:end_date]
+  plt.title("Sliced AAPL Stock Value Timeline")
+  plt.plot(stock_data_frame.index, stock_data_frame['Close'])
+  plt.xlabel("Dates")
+  plt.ylabel("Stock Values in Points")
+  plt.show()
+
 # Outputs the graph of the stock value
 def show_total_stock_graph(stock_data_frame):
   plt.title("AAPL Stock Value")
   plt.plot(stock_data_frame.index, stock_data_frame['Close'])
   plt.xlabel("Dates")
   plt.ylabel("Stock Values in Points")
-  plt.show()
-
-def plot_loss(history):
-  plt.plot(history.history['loss'], label='Training Loss')
-  plt.plot(history.history['val_loss'], label='Validation Loss')
-  plt.xlabel("Epochs")
-  plt.ylabel("Loss")
-  plt.legend()
   plt.show()
 
 if __name__ == "__main__":
