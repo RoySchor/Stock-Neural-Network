@@ -11,7 +11,7 @@ from tensorflow.keras.callbacks import LambdaCallback
 
 def main():
     # File we read in
-    stock_data_frame = pd.read_csv('aapl.us.txt')
+    stock_data_frame = pd.read_csv('AAPL.csv')
     # we only take in the Date and Close values from the CSV
     stock_data_frame = stock_data_frame[['Date', 'Close']]
     # Converts all Dates of type string to type Datetime
@@ -25,8 +25,9 @@ def main():
     # We believe that the network training all the data actually harms its predictions 
     # as it is not training on the most volatile part (the recent history), 
     # thus we are now trying to only train on recent history (past 3 years not all 30+)
-    start_date = "2015-01-07"
-    windowed_df = windowed_df.loc[start_date:]
+    start_date = "2018-05-04"
+    end_date = "2023-05-03"
+    windowed_df = windowed_df.loc[start_date:end_date]
     windowed_df = windowed_df.reset_index()
 
     # Now need to fix data to be numpy and reshape it to fit in LSTM
@@ -64,15 +65,24 @@ def main():
     model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mean_absolute_error'])
 
     # Call back function to get the loss and val_mean_absolute_error to graph it and see our accuracy
-    history = []
-    history.appendloss_history()
-    history_callback = []
-    # history_callback.append(LambdaCallback(on_epoch_end=on_epoch_end))
-    my_callback = LambdaCallback(on_epoch_end=on_epoch_end)
+    # history = []
+    # history.appendloss_history()
+    # history_callback = []
+    # # history_callback.append(LambdaCallback(on_epoch_end=on_epoch_end))
+    # my_callback = LambdaCallback(on_epoch_end=on_epoch_end)
 
-    history = Histories()
+    # history = Histories()
 
-    model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=20, callbacks=[history])
+    #define history so that I can plot the loss of this model
+    #define history_callback so that I can plot the loss of this model
+    # history = Histories()
+    # what is the error here?
+    # history_callback = LambdaCallback(on_epoch_end=on_epoch_end)
+    # history = model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=20, callbacks=[history_callback])
+
+
+    # model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=20, callbacks=[history])
+    history = model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=20)
     training_predictions = model.predict(x_train).flatten()
     validation_predictions = model.predict(x_validation).flatten()
     test_predictions = model.predict(x_test).flatten()
@@ -84,7 +94,8 @@ def main():
     network_validation_prediction_graph(dates_validation, validation_predictions, y_validation)
     network_testing_prediction_graph(dates_test, test_predictions, y_test)
     all_predictions_graph(dates_train, dates_validation, dates_test, training_predictions, validation_predictions, test_predictions, y_train, y_validation, y_test)
-    
+    plot_loss(history)
+
     # stock_data_frame = stock_data_frame.loc[start_date:]
     # plt.title("Sliced AAPL Stock Value Timeline")
     # plt.plot(stock_data_frame.index, stock_data_frame['Close'])
@@ -180,6 +191,14 @@ def show_total_stock_graph(stock_data_frame):
   plt.plot(stock_data_frame.index, stock_data_frame['Close'])
   plt.xlabel("Dates")
   plt.ylabel("Stock Values in Points")
+  plt.show()
+
+def plot_loss(history):
+  plt.plot(history.history['loss'], label='Training Loss')
+  plt.plot(history.history['val_loss'], label='Validation Loss')
+  plt.xlabel("Epochs")
+  plt.ylabel("Loss")
+  plt.legend()
   plt.show()
 
 if __name__ == "__main__":
