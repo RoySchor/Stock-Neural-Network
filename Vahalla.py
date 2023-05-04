@@ -8,6 +8,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import Callback
+#hopefully this works
 
 class Histories(Callback):
   def on_train_begin(self, logs={}):
@@ -110,7 +111,6 @@ def split_df_to_windowed_df(data, window_size=4):
   windowed_df['Target'] = data['Close']
   # Removes all rows that are missing some data - any incomplete windows that would mess up training
   return windowed_df.dropna()
-
 
 # Each date in the dataframe is a string but we want it as a Date object
 # thus this function converts a string to Datetime object
