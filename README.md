@@ -103,7 +103,7 @@ We then created our x_train and y_train by creating two arrays, with x_train bei
 <div style="text-align: center;">
     <div style="display: inline-block; text-align: left;">
         <br>raw_training_data.append(x_train_vals)<br>
-        raw_training_data.append(y_train_vals, 0, 0, 0)<br>
+        raw_training_data.append(y_train_vals, 0, 0, 0)<br><br>
     </div>
 
 Running the model delivered very strange, unexplainable results. We had reached a standstill. We did not know what was going on, and despite much effort, we needed help to figure out how to move forward.
