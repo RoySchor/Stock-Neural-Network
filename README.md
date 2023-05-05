@@ -100,4 +100,19 @@ We had split our data to feed it in an 80%-20% fashion. 80% would be our trainin
 
 We then created our x_train and y_train by creating two arrays, with x_train being the first four days of data and then our fifth day as our y-training value. This is the 4–1 philosophy we believed in.
 
+<div style="text-align: center;">
+    <div style="display: inline-block; text-align: left;">
+        <br>raw_training_data.append(x_train_vals)<br>
+        raw_training_data.append(y_train_vals, 0, 0, 0)<br>
+    </div>
 
+Running the model delivered very strange, unexplainable results. We had reached a standstill. We did not know what was going on, and despite much effort, we needed help to figure out how to move forward.
+
+<img width="632" alt="Screen Shot 2023-05-04 at 2 33 19 PM" src="https://user-images.githubusercontent.com/70181314/236555854-9495c6d9-bbb6-46e7-8594-7bf2439be87f.png">
+
+That is when we stopped coding. For the next few days, we were in research mode; the **scientist** in computer scientist was at the forefront.
+
+We won’t go too much into the research or what we learned. However, if you go to the end of this post, you can find all of our works cited with a short description of what the source is mainly about.
+
+## Second Approach — the successful one
+### Comment on Research and Finds
