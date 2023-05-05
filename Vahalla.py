@@ -16,6 +16,9 @@ from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import Callback
 
+start_date = "2019-01-01"
+end_date = "2023-05-03"
+
 class Histories(Callback):
   def on_train_begin(self, logs={}):
     self.losses = []
@@ -43,8 +46,7 @@ def main():
     # We believe that the network training all the data actually harms its predictions 
     # as it is not training on the most volatile part (the recent history), 
     # thus we are now trying to only train on recent history (past 3 years not all 30+)
-    start_date = "2019-01-01"
-    end_date = "2023-05-03"
+
     windowed_df = windowed_df.loc[start_date:end_date]
     windowed_df = windowed_df.reset_index()
 
@@ -98,13 +100,19 @@ def main():
     # network_validation_prediction_graph(dates_validation, validation_predictions, y_validation)
     # network_testing_prediction_graph(dates_test, test_predictions, y_test)
     # all_predictions_graph(dates_train, dates_validation, dates_test, training_predictions, validation_predictions, test_predictions, y_train, y_validation, y_test)
-    # both_loss_graphs(fits, history)
+    both_loss_graphs(fits, history)
     # graph_comparison_different_data_size(data)
 
     # Below are the 2 lines we used to show our predicted stock price in comparison to the actual stock price for the same day
     # print('Actual Stock Price | Predicted Stock Price')
     # print_two_arrays(y_test, test_predictions)
 # End of Main
+
+def format_start_end_date(start_date, end_date):
+  f_start_date = start_date.replace('-', '/')
+  f_end_date = end_date.replace('-', '/')
+  date_title = "\n("+f_start_date+"-"+f_end_date+")"
+  return date_title
 
 # This function takes two arrays a and b and prints a[0], b[0] \n a[1], b[1] \n etc
 def print_two_arrays(a, b):
@@ -140,7 +148,7 @@ def convert_to_date(stringDate):
 def graph_comparison_different_data_size(data):
   for each in data:
    plt.plot(each)
-  plt.title("Comparison of Validation Mean Absolute Error of Different Data Sizes")
+  plt.title("Comparison of Validation Mean Absolute Error of Different Data Sizes"+format_start_end_date(start_date, end_date))
   plt.xlabel("Epochs")
   plt.xticks(np.arange(1, 21, 1))
   plt.ylabel("Mean Absolute Error")  
@@ -150,19 +158,19 @@ def graph_comparison_different_data_size(data):
 # Outputs two graphs of our Network's loss over time and mean Absolute Error loss
 # Can't combine into one as scale is far different for both
 def both_loss_graphs(model_history, history):
-  plt.title("Loss over Time")
+  plt.title("Loss over Time"+format_start_end_date(start_date, end_date))
   plt.plot(model_history.epoch, history.losses)
   plt.xlabel("Epochs")
   plt.ylabel("Loss Value in Percent")
   plt.show()
 
-  plt.title("Validation Mean Absolute Error Loss over Time")
+  plt.title("Validation Mean Absolute Error Loss over Time"+format_start_end_date(start_date, end_date))
   plt.plot(model_history.epoch, history.val_mean_absolute_error)
   plt.xlabel("Epochs")
   plt.ylabel("Absolute Error Loss Value in Percent")
   plt.show()
 
-  plt.title("Validation Loss over Time")
+  plt.title("Validation Loss over Time"+format_start_end_date(start_date, end_date))
   plt.plot(model_history.epoch, history.validation_loss)
   plt.xlabel("Epochs")
   plt.ylabel("Validation_loss Loss Value in Percent")
@@ -170,7 +178,7 @@ def both_loss_graphs(model_history, history):
 
 # Outputs the graph of all our Network's predictions vs the real observation data combined
 def all_predictions_graph(training_dates, validation_dates, testing_dates, training_predictions, validation_predictions, test_predictions, y_train, y_val, y_test):
-  plt.title("Training, Validation, and Testing Predictions vs Real Observation")
+  plt.title("Training, Validation, and Testing Predictions vs Real Observation"+format_start_end_date(start_date, end_date))
   plt.plot(training_dates, training_predictions)
   plt.plot(training_dates, y_train)
   plt.plot(validation_dates, validation_predictions)
@@ -189,7 +197,7 @@ def all_predictions_graph(training_dates, validation_dates, testing_dates, train
 
 # Outputs the graph of our Networks testing predictions vs the real testing observation data
 def network_testing_prediction_graph(testing_dates, test_predictions, y_test):
-  plt.title("Testing Predictions vs Observations of Network")
+  plt.title("Testing Predictions vs Observations of Network"+format_start_end_date(start_date, end_date))
   plt.plot(testing_dates, test_predictions)
   plt.plot(testing_dates, y_test)
   plt.xlabel("Dates")
@@ -199,7 +207,7 @@ def network_testing_prediction_graph(testing_dates, test_predictions, y_test):
 
 # Outputs the graph of our Networks validation predictions vs the real validation observation data
 def network_validation_prediction_graph(validation_dates, validation_predictions, y_val):
-  plt.title("Validation Predictions vs Observations of Network")
+  plt.title("Validation Predictions vs Observations of Network"+format_start_end_date(start_date, end_date))
   plt.plot(validation_dates, validation_predictions)
   plt.plot(validation_dates, y_val)
   plt.xlabel("Dates")
@@ -209,7 +217,7 @@ def network_validation_prediction_graph(validation_dates, validation_predictions
 
 # Outputs the graph of our Networks training predictions vs the real training observation data
 def network_training_prediction_graph(training_dates, training_predictions, y_train):
-  plt.title("Training Predictions vs Observations of Network")
+  plt.title("Training Predictions vs Observations of Network"+format_start_end_date(start_date, end_date))
   plt.plot(training_dates, training_predictions)
   plt.plot(training_dates, y_train)
   plt.xlabel("Dates")
@@ -219,7 +227,7 @@ def network_training_prediction_graph(training_dates, training_predictions, y_tr
 
 # Outputs the graph of our three data sets split by section
 def show_data_split_graph(training_dates, y_train, validation_dates, y_validation, testing_dates, y_test):
-  plt.title("Total Data Set Split into Training(80%), Validation(10%), Test(10%)")
+  plt.title("Total Data Set Split into Training(80%), Validation(10%), Test(10%)"+format_start_end_date(start_date, end_date))
   plt.plot(training_dates, y_train, color='red')
   plt.plot(validation_dates, y_validation, color='blue')
   plt.plot(testing_dates, y_test, color='green')
@@ -231,7 +239,7 @@ def show_data_split_graph(training_dates, y_train, validation_dates, y_validatio
 # Outputs the graph of the stock value sliced to our testing dates
 def show_sliced_stock_graph(stock_data_frame, start_date, end_date):
   stock_data_frame = stock_data_frame.loc[start_date:end_date]
-  plt.title("Sliced AAPL Stock Value Timeline")
+  plt.title("Sliced AAPL Stock Value Timeline"+format_start_end_date(start_date, end_date))
   plt.plot(stock_data_frame.index, stock_data_frame['Close'])
   plt.xlabel("Dates")
   plt.ylabel("Stock Values in Points")
@@ -239,7 +247,7 @@ def show_sliced_stock_graph(stock_data_frame, start_date, end_date):
 
 # Outputs the graph of the stock value
 def show_total_stock_graph(stock_data_frame):
-  plt.title("AAPL Stock Value")
+  plt.title("AAPL Stock Value"+format_start_end_date(start_date, end_date))
   plt.plot(stock_data_frame.index, stock_data_frame['Close'])
   plt.xlabel("Dates")
   plt.ylabel("Stock Values in Points")
