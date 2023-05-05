@@ -2,6 +2,9 @@
 # Project by Ethan Glazer, Roy Schor, and Zane Hankin
 # Recurrent Neural Network model that trains on a window of 4 days, learning to predict the 5th day with the goal of predicting tomorrow's stock prices
 
+# Additional Credit to Greg Hogg and his youtube video for helping 
+# fix how we constructed our window for training: https://www.youtube.com/watch?v=CbTU92pbDKw&ab_channel=GregHogg
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
