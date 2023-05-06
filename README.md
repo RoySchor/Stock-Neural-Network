@@ -116,3 +116,6 @@ We won’t go too much into the research or what we learned. However, if you go 
 
 ## Second Approach — the successful one
 ### Comment on Research and Finds
+
+We looked to others for similar projects and how to adjust them. There were two articles that helped us mend our mistakes. The first was [this article](https://machinelearningmastery.com/time-series-prediction-lstm-recurrent-neural-networks-python-keras/). Shoutout to Jason Brownlee, the author of the article, for better articulating how to predict time series data points using LSTMs. Due to this article, we took a step back and rethought our initial plan of an LSTM model: build short-term memory for our RNN to train on. The source that propelled our progress was [this youtube video](https://www.youtube.com/watch?v=CbTU92pbDKw&ab_channel=GregHogg) that gave us a more desirable approach to splitting up our data. Instead of arranging the data into arrays for x and y, we learned we should store the data for x and y together in a [Pandas DataFrame](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html).
+
