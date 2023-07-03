@@ -18,6 +18,7 @@
 - [Works Cited](https://github.com/RoySchor/Stock-Neural-Network#works-cited)
 
 ## Our Motivation
+
 The stock market’s spikes and downfalls have mystified people since its inception, with nothing, machine or human, able to predict its future effectively. With an AI Network called Aladdin making investments and controlling over 7% of the entire world’s financial assets, which is almost the size of the U.S.’s total GDP, we thought, why not take a crack at it?
 
 Besides, what else could engross investment-minded students more than the constant fluxes of money in the market. This was our attempt at using a Neural Network to learn a certain pattern in the stock market and beat the 10% yearly avg increase in the market.
@@ -44,6 +45,8 @@ For example, the model should predict Friday’s close given Alphabet’s stock 
 We went through 2 main approaches; the initial one failed drastically. This led us to spend a lot more time researching the topic in more depth and finally creating the second successful approach.
 
 As always, we will start with the failed first approach.
+
+<sub><sub>[Back to top](https://github.com/RoySchor/Stock-Neural-Network#utilizing-ai-to-crack-the-stock-market-and-its-patterns-or-lack-thereof)</sub></sub>
 # Initial Approach, Data Setup, and Neural Network
 ### DATA, Data, data
 Every good neural network relies on an immense database. If a machine is only as good as the data it is taught on, your best bet is to use as deep a net of data as possible. At least, that is what we thought; we will understand why this is only sometimes the case later.
@@ -132,6 +135,7 @@ That is when we stopped coding. For the next few days, we were in research mode;
 
 We won’t go too much into the research or what we learned. However, if you go to the end of this post, you can find all of our works cited with a short description of what the source is mainly about.
 
+<sub><sub>[Back to top](https://github.com/RoySchor/Stock-Neural-Network#utilizing-ai-to-crack-the-stock-market-and-its-patterns-or-lack-thereof)</sub></sub>
 ## Second Approach — the successful one
 ### Comment on Research and Finds
 
@@ -216,6 +220,7 @@ Now that our data frame was formatted into the sliding windows, we needed to res
     </h6>
 </h5>
 
+<sub><sub>[Back to top](https://github.com/RoySchor/Stock-Neural-Network#utilizing-ai-to-crack-the-stock-market-and-its-patterns-or-lack-thereof)</sub></sub>
 ### Creating Training, Validation, and Test Data
 We kept the same strategy as the first approach. An 80–10–10 split. 80% of the now reshaped data will be used for training, 10% for validation to tweak the network, and 10% for test data.
 
@@ -280,6 +285,7 @@ We also decided to add a callback. A callback for a model is a function that get
 
 Now we really were set. Set to see what we had created and what it looked like visually.
 
+<sub><sub>[Back to top](https://github.com/RoySchor/Stock-Neural-Network#utilizing-ai-to-crack-the-stock-market-and-its-patterns-or-lack-thereof)</sub></sub>
 ## Ready To Predict
 Initially, we thought of training the model with all of the stock data YTD. The more data, the merrier, right?
 
@@ -343,6 +349,7 @@ We split the data into the following 80% Training, 10% Validation, and 10% Test:
 
 <img width="719" alt="Screen Shot 2023-05-05 at 1 10 00 PM" src="https://github.com/RoySchor/Stock-Neural-Network/assets/70181314/ac17cdee-c71b-4994-b2dc-cef05607a338">
 
+<sub><sub>[Back to top](https://github.com/RoySchor/Stock-Neural-Network#utilizing-ai-to-crack-the-stock-market-and-its-patterns-or-lack-thereof)</sub></sub>
 ## Final Results
 Once we sent the data into our model to run, we printed out a comparison of the Actual Stock Price and our model’s Predicted Stock Price. It looked pretty good; although we overshot some prices, the predictions were incredibly close on average.
 
@@ -362,6 +369,7 @@ To better visualize the losses that our model faced, we sought out to create som
 
 <img width="717" alt="Screen Shot 2023-05-05 at 1 15 09 PM" src="https://github.com/RoySchor/Stock-Neural-Network/assets/70181314/f923b60b-df43-4aaf-b0c8-30076c808777">
 
+<sub><sub>[Back to top](https://github.com/RoySchor/Stock-Neural-Network#utilizing-ai-to-crack-the-stock-market-and-its-patterns-or-lack-thereof)</sub></sub>
 ## Conclusion and Takeaways
 In the end, we were able to build a model that could extrapolate stock prices for X days into the future based on the AAPL stock. Since we were using historical data, we can determine that we did this with a solid success rate — *the rate changes depending on the period and stock.* This means that a network can predict a stock value in the short term, and there is somewhat of a pattern that is found.
 
@@ -372,6 +380,7 @@ Some things we would hope to add to this project in the future include:
 - Make it user dependent by taking in X amount of money and simulating its increase or decrease in the stock market during a given period. In addition, to retain a profit that is no worse than the Dow Jones Industrial Average of 10% yearly.
 - Improve our prediction by scraping news outlets to help minutely influence changes/drops in stock prices, which would influence the weights and biases of our network.
 
+<sub><sub>[Back to top](https://github.com/RoySchor/Stock-Neural-Network#utilizing-ai-to-crack-the-stock-market-and-its-patterns-or-lack-thereof)</sub></sub>
 ## Key Terms
 #### Training Data
 The data we trained our model on. This is represented by 80% of the data we selected from our dataset. We apply the “Window Sliding” method on this data for the model to learn what the 5th day’s closing price should be.
@@ -397,6 +406,7 @@ Indicates how bad the validation predictions were compared to the observations.
 #### Validation Mean Absolute Error
 Assesses the error between the validation observation and the validation predictions. It is calculated by the sum of absolute errors divided by the sample size. So for us, it is the sum of absolute errors between validation predictions and observations, divided by the number of data points (days) in our selected window size.
 
+<sub><sub>[Back to top](https://github.com/RoySchor/Stock-Neural-Network#utilizing-ai-to-crack-the-stock-market-and-its-patterns-or-lack-thereof)</sub></sub>
 ## Works Cited
 - [https://finance.yahoo.com/quote/AAPL/history?period1=345427200&period2=1683072000&interval=1d&filter=history&frequency=1d&includeAdjustedClose=true](https://finance.yahoo.com/quote/AAPL/history?period1=345427200&period2=1683072000&interval=1d&filter=history&frequency=1d&includeAdjustedClose=true)
 
