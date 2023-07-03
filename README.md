@@ -7,15 +7,15 @@
 <p><em>This post is for those interested in following our thought process and actual steps of researching, creating, and testing a neural network from scratch on stock prices. Ultimately, to predict future stock values.<br></em></p>
 
 ## Table of Contents
-- [Our Motivation](https://github.com/RoySchor/Stock-Neural-Network/edit/main/README.md#our-motivation)
-- [Initial Approach, Data Setup, and Neural Network](https://github.com/RoySchor/Stock-Neural-Network/edit/main/README.md#initial-approach-data-setup-and-neural-network)
-- [Second Approach — the successful one](https://github.com/RoySchor/Stock-Neural-Network/edit/main/README.md#second-approach--the-successful-one)
-    - [Creating Training, Validation, and Test Data](https://github.com/RoySchor/Stock-Neural-Network/edit/main/README.md#creating-training-validation-and-test-data)
-    - [Predicting Values](https://github.com/RoySchor/Stock-Neural-Network/edit/main/README.md#ready-to-predict)
-- [Final Results](https://github.com/RoySchor/Stock-Neural-Network/edit/main/README.md#final-results)
-- [Conclusion and Takeaways](https://github.com/RoySchor/Stock-Neural-Network/edit/main/README.md#conclusion-and-takeaways)
-- [Key Terms](https://github.com/RoySchor/Stock-Neural-Network/edit/main/README.md#key-terms)
-- [Works Cited](https://github.com/RoySchor/Stock-Neural-Network/edit/main/README.md#works-cited)
+- [Our Motivation](https://github.com/RoySchor/Stock-Neural-Network#our-motivation)
+- [Initial Approach, Data Setup, and Neural Network](https://github.com/RoySchor/Stock-Neural-Network#initial-approach-data-setup-and-neural-network)
+- [Second Approach — the successful one](https://github.com/RoySchor/Stock-Neural-Network#second-approach--the-successful-one)
+    - [Creating Training, Validation, and Test Data](https://github.com/RoySchor/Stock-Neural-Network#creating-training-validation-and-test-data)
+    - [Predicting Values](https://github.com/RoySchor/Stock-Neural-Network#ready-to-predict)
+- [Final Results](https://github.com/RoySchor/Stock-Neural-Network#final-results)
+- [Conclusion and Takeaways](https://github.com/RoySchor/Stock-Neural-Network#conclusion-and-takeaways)
+- [Key Terms](https://github.com/RoySchor/Stock-Neural-Network#key-terms)
+- [Works Cited](https://github.com/RoySchor/Stock-Neural-Network#works-cited)
 
 ## Our Motivation
 The stock market’s spikes and downfalls have mystified people since its inception, with nothing, machine or human, able to predict its future effectively. With an AI Network called Aladdin making investments and controlling over 7% of the entire world’s financial assets, which is almost the size of the U.S.’s total GDP, we thought, why not take a crack at it?
